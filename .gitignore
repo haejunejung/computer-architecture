@@ -1,3 +1,5 @@
-./app/node_modules
-./app/build
-./app/dist
+app/node_modules
+app/build
+app/dist
+
+simulator/node_modules

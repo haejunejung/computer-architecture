@@ -1,4 +1,4 @@
-import { inst_t, symbol_t } from "./class";
+import { inst_t } from "./class";
 
 const MAX_SYMBOL_TABLE_SIZE = 1024;
 const MEM_TEXT_START = 0x00400000;
@@ -93,5 +93,36 @@ export {
   MAX_SYMBOL_TABLE_SIZE,
   MEM_DATA_START,
   MEM_TEXT_START,
+  inst_list,
+  R_list,
+  I_list,
+  J_list,
+  ADD,
+  ADDI,
+  ADDIU,
+  ADDU,
+  AND,
+  ANDI,
+  BEQ,
+  BNE,
+  J,
+  JAL,
+  JR,
+  LHU,
+  LUI,
+  LW,
+  NOR,
+  OR,
+  ORI,
+  SLT,
+  SLTI,
+  SLTIU,
+  SLTU,
+  SLL,
+  SRL,
+  SH,
+  SW,
+  SUB,
+  SUBU,
   section,
 };

@@ -4,11 +4,27 @@ class inst_t {
   private _type: string;
   private _funct: string;
 
-  constructor(name: string, op: string, type: string, funct: string) {
-    this._name = name;
-    this._op = op;
-    this._type = type;
-    this._funct = funct;
+  get name(): string {
+    return this._name;
+  }
+
+  get op(): string {
+    return this._op;
+  }
+
+  get type(): string {
+    return this._type;
+  }
+
+  get funct(): string {
+    return this._funct;
+  }
+
+  constructor(name?: string, op?: string, type?: string, funct?: string) {
+    this._name = name || "";
+    this._op = op || "";
+    this._type = type || "";
+    this._funct = funct || "";
   }
 }
 
@@ -32,9 +48,9 @@ class symbol_t {
     this._address = addr;
   }
 
-  constructor() {
-    this._name = "";
-    this._address = 0;
+  constructor(name?: string, address?: number) {
+    this._name = name || "";
+    this._address = address || 0;
   }
 }
 

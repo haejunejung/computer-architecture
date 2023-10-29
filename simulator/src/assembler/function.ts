@@ -1,8 +1,6 @@
 import { trim } from "lodash";
 import { symbol_t } from "./class";
 
-const symbol_table_add_entry = (symbol: symbol_t) => {};
-
 const trim_value = (value: string, chars: string): string => {
   return trim(value, chars);
 };

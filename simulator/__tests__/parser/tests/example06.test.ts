@@ -1,6 +1,6 @@
 import { readFileSync } from "fs";
 import { register_file } from "../../../src/parser/interface";
-import { go } from "../../../src/parser/parser";
+import { go } from "../../../src/parser/functions/parser";
 
 describe("parser integration test", () => {
   test(`example06.o test`, async () => {

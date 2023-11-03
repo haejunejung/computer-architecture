@@ -3,37 +3,26 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@assemblyscript/loader": "^0.27.14",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "@types/jest": "^27.5.2",
-    "@types/node": "^16.18.59",
-    "@types/react": "^18.2.29",
+    "@types/node": "^16.18.60",
+    "@types/react": "^18.2.34",
     "@types/react-dom": "^18.2.14",
-    "electron-is-dev": "^2.0.0",
+    "lodash": "^4.17.21",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
-    "recoil": "^0.7.7",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "react-start": "react-scripts start",
-    "react-build": "react-scripts build",
-    "react-test": "react-scripts test",
-    "react-eject": "react-scripts eject",
-    "start-renderer": "cross-env BROWSER=none npm run react-start",
-    "start-main": "electron .",
-    "compile-main": "tsc ./public/electron.ts",
-    "start-main-after-renderer": "wait-on http://localhost:3000 && npm run start-main",
-    "dev": "npm run compile-main && concurrently -n renderer, main 'npm:start-renderer' 'npm:start-main-after-renderer'",
-    "pack": "npm run compile-main && npm run react-build && electron-builder --dir",
-    "build": "npm run compile-main && npm run react-build && electron-builder build",
-    "build:osx": "npm run build -- --mac",
-    "build:linux": "npm run build -- --linux",
-    "build:win": "npm run build -- --win",
-    "predist": "npm run compile-main"
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": [
@@ -54,14 +43,7 @@
     ]
   },
   "devDependencies": {
-    "autoprefixer": "^10.4.16",
-    "concurrently": "^8.2.2",
-    "cross-env": "^7.0.3",
-    "electron": "^27.0.1",
-    "electron-builder": "^24.6.4",
-    "postcss": "^8.4.31",
-    "postcss-loader": "^7.3.3",
-    "tailwindcss": "^3.3.3",
-    "wait-on": "^7.0.1"
+    "@types/lodash": "^4.14.200",
+    "assemblyscript": "^0.27.14"
   }
 }

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@assemblyscript/loader": "^0.27.14",
+    "@assemblyscript/loader": "^0.27.15",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
@@ -11,7 +11,6 @@
     "@types/node": "^16.18.60",
     "@types/react": "^18.2.34",
     "@types/react-dom": "^18.2.14",
-    "lodash": "^4.17.21",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
@@ -41,9 +40,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "@types/lodash": "^4.14.200",
-    "assemblyscript": "^0.27.14"
   }
 }

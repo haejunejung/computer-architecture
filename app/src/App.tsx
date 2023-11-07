@@ -1,23 +1,14 @@
-import React, { useEffect, useState } from "react";
-import { loadWasm } from "./wasmLoader";
+import React, {useEffect} from 'react';
+import {loadWebAssembly} from './useWasm';
 
-function App() {
-  const [wasmLoaded, setWasmLoaded] = useState(null);
-
+const App = (): JSX.Element => {
   useEffect(() => {
-    loadWasm().then((result) => {
-      console.log(result);
-      console.log(result.exports.makeBinaryFile);
+    loadWebAssembly('release.wasm').then(response => {
+      console.log(response);
     });
-  });
+  }, []);
 
-  useEffect(() => {
-    if (wasmLoaded) {
-      console.log(wasmLoaded);
-    }
-  }, [wasmLoaded]);
-
-  return <div className="App"></div>;
-}
+  return <div></div>;
+};
 
 export default App;

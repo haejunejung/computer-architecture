@@ -1,13 +1,15 @@
 {
   "files": {
-    "main.css": "/computer-architecture/static/css/main.b8350ec3.css",
-    "main.js": "/computer-architecture/static/js/main.7e9cdcb5.js",
+    "main.css": "/computer-architecture/static/css/main.e6c13ad2.css",
+    "main.js": "/computer-architecture/static/js/main.cd5217d3.js",
+    "static/js/787.7e1a58a3.chunk.js": "/computer-architecture/static/js/787.7e1a58a3.chunk.js",
     "index.html": "/computer-architecture/index.html",
-    "main.b8350ec3.css.map": "/computer-architecture/static/css/main.b8350ec3.css.map",
-    "main.7e9cdcb5.js.map": "/computer-architecture/static/js/main.7e9cdcb5.js.map"
+    "main.e6c13ad2.css.map": "/computer-architecture/static/css/main.e6c13ad2.css.map",
+    "main.cd5217d3.js.map": "/computer-architecture/static/js/main.cd5217d3.js.map",
+    "787.7e1a58a3.chunk.js.map": "/computer-architecture/static/js/787.7e1a58a3.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.b8350ec3.css",
-    "static/js/main.7e9cdcb5.js"
+    "static/css/main.e6c13ad2.css",
+    "static/js/main.cd5217d3.js"
   ]
 }

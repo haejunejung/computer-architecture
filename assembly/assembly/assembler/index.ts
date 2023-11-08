@@ -64,33 +64,80 @@ class symbolT {
 }
 
 class SymbolTable {
-  symbols: symbolT[];
-  curIndex: i32;
+  _symbols: symbolT[];
+  _curIndex: i32;
 
   constructor(symbols: symbolT[], curIndex: i32) {
-    this.symbols = symbols;
-    this.curIndex = curIndex;
+    this._symbols = symbols;
+    this._curIndex = curIndex;
+  }
+
+  get symbols(): symbolT[] {
+    return this._symbols;
+  }
+  get curIndex(): i32 {
+    return this._curIndex;
+  }
+
+  set symbols(symbols: symbolT[]) {
+    this._symbols = symbols;
+  }
+  set curIndex(curIndex: i32) {
+    this._curIndex = curIndex;
   }
 }
 
 class DataSegment {
-  dataSeg: string[];
-  sectionSize: i32;
+  _dataSeg: string[];
+  _sectionSize: i32;
 
   constructor(dataSeg: string[], sectionSize: i32) {
-    this.dataSeg = dataSeg;
-    this.sectionSize = sectionSize;
+    this._dataSeg = dataSeg;
+    this._sectionSize = sectionSize;
+  }
+
+  get dataSeg(): string[] {
+    return this._dataSeg;
+  }
+  get sectionSize(): i32 {
+    return this._sectionSize;
+  }
+
+  set dataSeg(dataSeg: string[]) {
+    this._dataSeg = dataSeg;
+  }
+  set sectionSize(sectionSize: i32) {
+    this._sectionSize = sectionSize;
   }
 }
 
 class TextSegment {
-  textSeg: string[];
-  sectionSize: i32;
+  _textSeg: string[];
+  _sectionSize: i32;
 
   constructor(textSeg: string[], sectionSize: i32) {
-    this.textSeg = textSeg;
-    this.sectionSize = sectionSize;
+    this._textSeg = textSeg;
+    this._sectionSize = sectionSize;
   }
+
+  get textSeg(): string[] {
+    return this._textSeg;
+  }
+  get sectionSize(): i32 {
+    return this._sectionSize;
+  }
+
+  set textSeg(textSeg: string[]) {
+    this._textSeg = textSeg;
+  }
+  set sectionSize(sectionSize: i32) {
+    this._sectionSize = sectionSize;
+  }
+}
+
+export function txtSeg(input: string[]): string[] {
+  const txtSegment = new TextSegment(input, input.length);
+  return txtSegment.textSeg;
 }
 
 class MipsAssembler {

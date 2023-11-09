@@ -1,16 +1,16 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import ViewHeadlineIcon from "@mui/icons-material/ViewHeadline";
-import FileUploader from "./FileUploader";
+import React, {useState} from 'react';
+import {Link} from 'react-router-dom';
+import ViewHeadlineIcon from '@mui/icons-material/ViewHeadline';
+import FileUploader from './FileUploader';
 
 const Sidebar = (): JSX.Element => {
-  const fold = localStorage.getItem("fold");
+  const fold = localStorage.getItem('fold');
   const parseFold: boolean = fold === null ? false : JSON.parse(fold);
   const [isFold, setIsFold] = useState(parseFold);
 
   const onSidebarHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
-    localStorage.setItem("fold", JSON.stringify(isFold));
-    setIsFold((prev) => !prev);
+    localStorage.setItem('fold', JSON.stringify(isFold));
+    setIsFold(prev => !prev);
   };
 
   return (

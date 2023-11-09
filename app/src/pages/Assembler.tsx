@@ -1,7 +1,7 @@
 import React from 'react';
-import Sidebar from '../components/Sidebar';
-import AssemblerSheet from '../components/AssemblerSheet';
-import BinarySheet from '../components/BinarySheet';
+import Sidebar from '../components/shared/Sidebar';
+import AssemblerSheet from '../components/assembler/AssemblerSheet';
+import BinarySheet from '../components/assembler/BinarySheet';
 
 const Assembler = () => {
   return (

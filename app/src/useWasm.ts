@@ -151,11 +151,11 @@ export const loadWebAssembly = async (filename: string) => {
     const dataSeg_ptr = __pin(createDataSegment());
     const textSeg_ptr = __pin(createTextSegment());
 
-    if (typeof makeSymbolTable === 'function') {
-      const ptrs = assemblyCode.map(c => __newString(c));
-      const arrayPtr = __pin(__newArray(StringArrayId as number, ptrs));
-      makeSymbolTable(symbol_t_ptr, dataSeg_ptr, textSeg_ptr, arrayPtr);
-    }
+    // if (typeof makeSymbolTable === 'function') {
+    //   const ptrs = assemblyCode.map(c => __newString(c));
+    //   const arrayPtr = __pin(__newArray(StringArrayId as number, ptrs));
+    //   makeSymbolTable(symbol_t_ptr, dataSeg_ptr, textSeg_ptr, arrayPtr);
+    // }
 
     if (
       typeof getDataSeg === 'function' &&

@@ -1,11 +1,12 @@
 import React, {useRef} from 'react';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import {useSetRecoilState} from 'recoil';
-import {fileContentsState} from '../../states/recoil';
+import {fileContentsState, fileNamesState} from '../../states/recoil';
 
 const FileUploader = (): JSX.Element => {
   const fileInput = useRef<HTMLInputElement>(null);
-  const setFileContents = useSetRecoilState<string[]>(fileContentsState);
+  const setFileContents = useSetRecoilState<Array<string>>(fileContentsState);
+  const setFileNames = useSetRecoilState<Array<string>>(fileNamesState);
 
   const onClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     fileInput.current?.click();
@@ -15,6 +16,8 @@ const FileUploader = (): JSX.Element => {
     event.preventDefault();
     const file = event.target.files?.[0];
     if (file) {
+      const fileName = file.name;
+      setFileNames(prev => [...prev, fileName]);
       const reader = new FileReader();
       reader.onload = e => {
         const text = (e.target!.result as string).trim();

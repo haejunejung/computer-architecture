@@ -1,40 +1,51 @@
-import React, {useState} from 'react';
-import {Link} from 'react-router-dom';
-import ViewHeadlineIcon from '@mui/icons-material/ViewHeadline';
+import React from 'react';
 import FileUploader from './FileUploader';
+import FolderOpenIcon from '@mui/icons-material/FolderOpen';
+import {useRecoilValue, useSetRecoilState} from 'recoil';
+import {
+  fileContentsState,
+  fileNamesState,
+  filesState,
+} from '../../states/recoil';
 
 const Sidebar = (): JSX.Element => {
-  const fold = localStorage.getItem('fold');
-  const parseFold: boolean = fold === null ? false : JSON.parse(fold);
-  const [isFold, setIsFold] = useState(parseFold);
+  const fileNames = useRecoilValue(fileNamesState);
+  const files = useRecoilValue(filesState);
+  const setFileContents = useSetRecoilState(fileContentsState);
 
-  const onSidebarHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
-    localStorage.setItem('fold', JSON.stringify(isFold));
-    setIsFold(prev => !prev);
+  const onClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    const {name} = event.currentTarget;
+    files.forEach((file, index) => {
+      if (file.file === name) {
+        setFileContents(file.data);
+      }
+    });
   };
 
   return (
-    <nav className="px-4 py-4">
-      <section>
-        <button onClick={onSidebarHandler}>
-          <ViewHeadlineIcon />
-        </button>
-        <FileUploader />
-      </section>
-      {isFold && (
+    <main className="flex">
+      <nav className="px-10">
         <section className="flex flex-col py-4">
-          <Link to="/assembler">
-            <button>Assembler</button>
-          </Link>
-          <Link to="/parser">
-            <button>Parser</button>
-          </Link>
-          <Link to="/cache">
-            <button>Cache</button>
-          </Link>
+          <div>
+            <FolderOpenIcon className="border border-black" />
+            <FileUploader />
+          </div>
+
+          {fileNames.map((file, index) => {
+            return (
+              <button
+                onClick={onClick}
+                key={index}
+                name={file}
+                className="py-1">
+                <span>{index + 1}</span>
+                <span className="px-2">{file}</span>
+              </button>
+            );
+          })}
         </section>
-      )}
-    </nav>
+      </nav>
+    </main>
   );
 };
 

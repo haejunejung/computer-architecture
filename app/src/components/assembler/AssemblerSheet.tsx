@@ -12,12 +12,20 @@ const AssemblerSheet = (): JSX.Element => {
     () => [
       {
         accessor: 'number',
-        Header: '#',
+        Header: <div className="text-start">#</div>,
       },
       {
         accessor: 'data',
-        Header: 'assembly code',
-        Cell: ({value}) => <div>{value}</div>,
+        Header: <div className="px-4 text-start">Assembly code</div>,
+        Cell: ({value}) => {
+          if (value.includes('.data') || value.includes('.text')) {
+            return <div className="px-16 text-base">{value}</div>;
+          } else if (value.includes(':')) {
+            return <div className="px-4 text-base">{value}</div>;
+          } else {
+            return <div className="px-16 text-base">{value}</div>;
+          }
+        },
       },
     ],
     [],

@@ -1,4 +1,5 @@
 import loader from '@assemblyscript/loader';
+import {AssemblerOutput} from './states/types';
 
 export const loadWebAssembly = async (
   filename: string,
@@ -18,7 +19,7 @@ export const loadWebAssembly = async (
 export const loadBinaryFile = async (
   exports: loader.ASUtil & Record<string, unknown>,
   assemblyCode: Array<string>,
-): Promise<Array<string> | undefined> => {
+): Promise<AssemblerOutput> => {
   const {
     __pin,
     __unpin,
@@ -31,14 +32,19 @@ export const loadBinaryFile = async (
     createTextSegment,
     makeBinaryFile,
     StringArrayId,
+    getDataSeg,
+    getTextSeg,
   } = exports;
 
+  let result: AssemblerOutput = {binarys: [], datas: [], texts: []};
   try {
     if (
       typeof createSymbolTable === 'function' &&
       typeof createDataSegment === 'function' &&
       typeof createTextSegment === 'function' &&
-      typeof makeBinaryFile === 'function'
+      typeof makeBinaryFile === 'function' &&
+      typeof getTextSeg === 'function' &&
+      typeof getDataSeg === 'function'
     ) {
       const symbol_t_ptr = __pin(createSymbolTable());
       const dataSeg_ptr = __pin(createDataSegment());
@@ -51,11 +57,20 @@ export const loadBinaryFile = async (
         textSeg_ptr,
         arrayPtr,
       );
+
+      const textSegArrayPtr = getTextSeg(textSeg_ptr);
+      const dataSegArrayPtr = getDataSeg(dataSeg_ptr);
+      const texts = __getArray(textSegArrayPtr);
+      const textResult = texts.map(b => __getString(b));
+      const datas = __getArray(dataSegArrayPtr);
+      const dataResult = datas.map(b => __getString(b));
       const binarys = __getArray(binarysPtr);
-      const result = binarys.map(b => __getString(b));
-      return result;
+      const binaryResult = binarys.map(b => __getString(b));
+      result = {binarys: binaryResult, datas: dataResult, texts: textResult};
     }
   } catch (error) {
     console.log(error);
   }
+
+  return result;
 };

@@ -1,7 +1,6 @@
 import React from 'react';
-import {Column, useTable} from 'react-table';
+import {useTable} from 'react-table';
 
-//TODO any type -> ??
 const TableSheet: React.FC<{columns: any; data: any}> = ({
   columns,
   data,
@@ -10,9 +9,9 @@ const TableSheet: React.FC<{columns: any; data: any}> = ({
     useTable({columns, data});
 
   return (
-    <section className="sticky overflow-y-scroll max-h-1/2">
-      <table {...getTableProps()}>
-        <thead>
+    <section className="w-full overflow-auto border border-black h-[90vh] rounded-md">
+      <table {...getTableProps()} className="w-full ">
+        <thead className="text-white bg-black border border-black">
           {headerGroups.map(headerGroup => (
             <tr {...headerGroup.getHeaderGroupProps()}>
               {headerGroup.headers.map(column => (

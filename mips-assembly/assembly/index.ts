@@ -1,3 +1,6 @@
+//! Shared
+
+//! Assembler
 function numtoBits(num: i32, pad: i8 = 32): string {
   if (num < 0) {
     num = 2 ** pad + num;
@@ -454,3 +457,102 @@ export function makeBinaryFile(
 
   return binarySize.concat(binaryText.concat(binaryData));
 }
+
+//! Parser
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+class Register {
+  regs_: Map<string, string>;
+
+  constructor() {
+    this.regs_ = new Map<string, string>();
+    this.regs_.set("R0", "0x00000000");
+    this.regs_.set("R1", "0x00001000");
+  }
+}
+
+class MemorySection {
+  dataSection_: Map<string, string>;
+  stackSection_: Map<string, string>;
+
+  constructor() {
+    this.dataSection_ = new Map<string, string>();
+    this.stackSection_ = new Map<string, string>();
+  }
+}
+
+class computerSystem {
+  PC_: string = "0x0040000";
+  REGS_: Register = new Register();
+  MEMS_: MemorySection = new MemorySection();
+}
+
+export function createComputerSystem(): computerSystem {
+  return new computerSystem();
+}
+
+export function getCycles(ptr: usize): Array<string> {
+  const cs = changetype<computerSystem>(ptr);
+  const pc = getPC(ptr);
+  const regs = getRegs(ptr);
+  const dataSection = getDataSection(ptr);
+  const stackSection = getStackSection(ptr);
+
+  const cycles: Array<string> = [];
+  cycles.push(
+    `.pc${pc}.regs${regs}.dataSection${dataSection}.stackSection${stackSection}`
+  );
+  return cycles;
+}
+
+export function getPC(ptr: usize): string {
+  const cs = changetype<computerSystem>(ptr);
+  return cs.PC_;
+}
+
+export function getRegs(ptr: usize): string {
+  const cs = changetype<computerSystem>(ptr);
+  let serializeMap: string[] = [];
+  const keys = cs.REGS_.regs_.keys();
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    const value = cs.REGS_.regs_.get(key);
+    if (value !== null) {
+      serializeMap.push(`${key}:${value}`);
+    }
+  }
+
+  return serializeMap.join(",");
+}
+
+export function getDataSection(ptr: usize): string {
+  const cs = changetype<computerSystem>(ptr);
+  let serializeMap: string[] = [];
+  const keys = cs.MEMS_.dataSection_.keys();
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    const value = cs.MEMS_.dataSection_.get(key);
+    if (value !== null) {
+      serializeMap.push(`${key}:${value}`);
+    }
+  }
+
+  return serializeMap.join(",");
+}
+
+export function getStackSection(ptr: usize): string {
+  const cs = changetype<computerSystem>(ptr);
+  let serializeMap: string[] = [];
+  const keys = cs.MEMS_.stackSection_.keys();
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    const value = cs.MEMS_.stackSection_.get(key);
+    if (value !== null) {
+      serializeMap.push(`${key}:${value}`);
+    }
+  }
+
+  return serializeMap.join(",");
+}
+
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

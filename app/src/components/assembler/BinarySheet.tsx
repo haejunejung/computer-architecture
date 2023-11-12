@@ -38,7 +38,8 @@ const BinarySheet = (): JSX.Element => {
     () => [
       {
         accessor: 'number',
-        Header: <div className="text-start">#</div>,
+        Header: <div className="text-center">#</div>,
+        Cell: ({value}) => <div className="text-center">{value}</div>,
       },
       {
         accessor: 'data',

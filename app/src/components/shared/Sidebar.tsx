@@ -38,7 +38,7 @@ const Sidebar = (): JSX.Element => {
                 key={index}
                 name={file}
                 className="py-1">
-                <span>{index + 1}</span>
+                <span>{index + 1}.</span>
                 <span className="px-2">{file}</span>
               </button>
             );

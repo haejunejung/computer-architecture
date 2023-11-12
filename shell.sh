@@ -1,7 +1,7 @@
 rm -rf app/public/release.wasm
 
-cd assembler
+cd mips-assembly
 npm run asbuild
 
 cd ..
-cp assembler/build/release.wasm app/public
+cp mips-assembly/build/release.wasm app/public

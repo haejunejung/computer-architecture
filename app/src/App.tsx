@@ -1,5 +1,5 @@
 import React, {useEffect} from 'react';
-import {loadWebAssembly, loadBinaryFile} from './wasmLoader';
+import {loadWebAssembly} from './wasmLoader';
 import {useSetRecoilState} from 'recoil';
 import loader from '@assemblyscript/loader';
 import {wasmModuleState} from './states/recoil';

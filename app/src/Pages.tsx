@@ -7,7 +7,7 @@ import Cache from './pages/Cache';
 const Pages = (): JSX.Element => {
   return (
     <Routes>
-      <Route path="/" element={<Assembler />} />
+      <Route path="/" element={<Parser />} />
       <Route path="/assembler" element={<Assembler />} />
       <Route path="/parser" element={<Parser />} />
       <Route path="/cache" element={<Cache />} />

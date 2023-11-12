@@ -8,7 +8,7 @@ import {
   example5,
   example7,
   exmaple6,
-} from '../components/assembler/Examples';
+} from '../components/shared/Examples';
 import {AssemblerOutput, Files} from './types';
 
 export const wasmModuleState = atom<

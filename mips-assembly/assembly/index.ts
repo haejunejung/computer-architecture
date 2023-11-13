@@ -1,16 +1,10 @@
 //! Shared
 
-//! Assembler
-function numtoBits(num: i32, pad: i8 = 32): string {
-  if (num < 0) {
-    num = 2 ** pad + num;
-  }
-
-  const bit = num.toString(2).padStart(pad, "0");
-  return bit;
-}
-
-class instT {
+//* classes
+/**
+ *  InstT
+ */
+class InstT {
   name_: string = "";
   op_: string = "";
   type_: string = "";
@@ -24,6 +18,9 @@ class instT {
   }
 }
 
+/**
+ * SymbolT
+ */
 class SymbolT {
   name_: string = "";
   address_: i32 = 0;
@@ -97,16 +94,22 @@ export function getTextSeg(ptr: usize): Array<string> {
   return textSeg.textSeg_;
 }
 
-export const StringArrayId = idof<Array<string>>();
+//* functions
+function numtoBits(num: i32, pad: i8 = 32): string {
+  if (num < 0) {
+    num = 2 ** pad + num;
+  }
 
-export const SymbolTableId = idof<SymbolTable>();
+  const bit = num.toString(2).padStart(pad, "0");
+  return bit;
+}
 
-export const SymbolTId = idof<SymbolT>();
+function numToHexAndPad(num: i32, pad: i8 = 8): string {
+  if (num < 0) {
+    num = 0xffffffff + num + 1; // 음수를 양의 32비트 정수로 변환
+  }
 
-enum section {
-  DATA = 0,
-  TEXT = 1,
-  MAX_SIZE = 2,
+  return num.toString(16).padStart(pad, "0");
 }
 
 function customSplit(input: string, delimiters: string[]): string[] {
@@ -133,15 +136,82 @@ function customSplit(input: string, delimiters: string[]): string[] {
   return result;
 }
 
+function trimReg(value: string): i32 {
+  return parseInt(value.replace("$", "").replace(",", "")) as i32;
+}
+
+//* constants
+export const SymbolTId = idof<SymbolT>();
+export const SymbolTableId = idof<SymbolTable>();
+export const StringArrayId = idof<Array<string>>();
+const ADD = new InstT("add", "000000", "R", "100000");
+const ADDI = new InstT("addi", "001000", "I", "");
+const ADDIU = new InstT("addiu", "001001", "I", "");
+const ADDU = new InstT("addu", "000000", "R", "100001");
+const AND = new InstT("and", "000000", "R", "100100");
+const ANDI = new InstT("andi", "001100", "I", "");
+const BEQ = new InstT("beq", "000100", "I", "");
+const BNE = new InstT("bne", "000101", "I", "");
+const J = new InstT("j", "000010", "J", "");
+const JAL = new InstT("jal", "000011", "J", "");
+const JR = new InstT("jr", "000000", "R", "001000");
+const LHU = new InstT("lhu", "100101", "I", "");
+const LUI = new InstT("lui", "001111", "I", "");
+const LW = new InstT("lw", "100011", "I", "");
+const NOR = new InstT("nor", "000000", "R", "100111");
+const OR = new InstT("or", "000000", "R", "100101");
+const ORI = new InstT("ori", "001101", "I", "");
+const SLT = new InstT("slt", "000000", "R", "101010");
+const SLTI = new InstT("slti", "001010", "I", "");
+const SLTIU = new InstT("sltiu", "001011", "I", "");
+const SLTU = new InstT("sltu", "000000", "R", "101011");
+const SLL = new InstT("sll", "000000", "R", "000000");
+const SRL = new InstT("srl", "000000", "R", "000010");
+const SH = new InstT("sh", "101001", "I", "");
+const SW = new InstT("sw", "101011", "I", "");
+const SUB = new InstT("sub", "000000", "R", "100010");
+const SUBU = new InstT("subu", "000000", "R", "100011");
+const inst_list = [
+  ADD,
+  ADDI,
+  ADDIU,
+  ADDU,
+  AND,
+  ANDI,
+  BEQ,
+  BNE,
+  J,
+  JAL,
+  JR,
+  LHU,
+  LUI,
+  LW,
+  NOR,
+  OR,
+  ORI,
+  SLT,
+  SLTI,
+  SLTIU,
+  SLTU,
+  SLL,
+  SRL,
+  SH,
+  SW,
+  SUB,
+  SUBU,
+];
 const MAX_SYMBOL_TABLE_SIZE = 1024;
 const MEM_TEXT_START = 0x00400000;
 const MEM_DATA_START = 0x10000000;
 const BYTES_PER_WORD = 4;
 
-function num_to_hex_and_pad(num: i32, pad: i8 = 8): string {
-  return num.toString(16).padStart(pad, "0");
+enum section {
+  DATA = 0,
+  TEXT = 1,
+  MAX_SIZE = 2,
 }
 
+//! Assembler
 export function makeSymbolTable(
   symbolTablePtr: usize,
   dataSegPtr: usize,
@@ -206,7 +276,7 @@ export function makeSymbolTable(
           )[0];
           const targetAddress =
             SYMBOL_TABLE.findTargetAddress(targetSymbolName);
-          const targetHexAddress: string = num_to_hex_and_pad(targetAddress);
+          const targetHexAddress: string = numToHexAndPad(targetAddress);
           TEXT_SEG.textSeg_.push(`lui ${tokenLine[1]} ${tokenLine[2]}`);
 
           if (targetHexAddress.slice(4) !== "0000") {
@@ -228,10 +298,6 @@ export function makeSymbolTable(
 
     address += BYTES_PER_WORD;
   }
-}
-
-export function symbol(symbol: SymbolT): string {
-  return symbol.name_;
 }
 
 export function recordSectionSize(
@@ -263,64 +329,6 @@ export function recordDataSection(dataSegPtr: usize): Array<string> {
   return binary_data_section;
 }
 
-const ADD = new instT("add", "000000", "R", "100000");
-const ADDI = new instT("addi", "001000", "I", "");
-const ADDIU = new instT("addiu", "001001", "I", "");
-const ADDU = new instT("addu", "000000", "R", "100001");
-const AND = new instT("and", "000000", "R", "100100");
-const ANDI = new instT("andi", "001100", "I", "");
-const BEQ = new instT("beq", "000100", "I", "");
-const BNE = new instT("bne", "000101", "I", "");
-const J = new instT("j", "000010", "J", "");
-const JAL = new instT("jal", "000011", "J", "");
-const JR = new instT("jr", "000000", "R", "001000");
-const LHU = new instT("lhu", "100101", "I", "");
-const LUI = new instT("lui", "001111", "I", "");
-const LW = new instT("lw", "100011", "I", "");
-const NOR = new instT("nor", "000000", "R", "100111");
-const OR = new instT("or", "000000", "R", "100101");
-const ORI = new instT("ori", "001101", "I", "");
-const SLT = new instT("slt", "000000", "R", "101010");
-const SLTI = new instT("slti", "001010", "I", "");
-const SLTIU = new instT("sltiu", "001011", "I", "");
-const SLTU = new instT("sltu", "000000", "R", "101011");
-const SLL = new instT("sll", "000000", "R", "000000");
-const SRL = new instT("srl", "000000", "R", "000010");
-const SH = new instT("sh", "101001", "I", "");
-const SW = new instT("sw", "101011", "I", "");
-const SUB = new instT("sub", "000000", "R", "100010");
-const SUBU = new instT("subu", "000000", "R", "100011");
-
-const inst_list = [
-  ADD,
-  ADDI,
-  ADDIU,
-  ADDU,
-  AND,
-  ANDI,
-  BEQ,
-  BNE,
-  J,
-  JAL,
-  JR,
-  LHU,
-  LUI,
-  LW,
-  NOR,
-  OR,
-  ORI,
-  SLT,
-  SLTI,
-  SLTIU,
-  SLTU,
-  SLL,
-  SRL,
-  SH,
-  SW,
-  SUB,
-  SUBU,
-];
-
 export function recordTextSection(
   symbolTablePtr: usize,
   textSegPtr: usize
@@ -342,7 +350,7 @@ export function recordTextSection(
     const line: string = TEXT_SEG.textSeg_[i];
     const instruct: Array<string> = line.split(" ");
     const instName: string = instruct[0];
-    let curInst: instT | null = null;
+    let curInst: InstT | null = null;
 
     for (let i = 0; i < inst_list.length; i++) {
       if (inst_list[i].name_ === instName) {
@@ -437,10 +445,6 @@ export function recordTextSection(
   return binaryText;
 }
 
-export function trimReg(value: string): i32 {
-  return parseInt(value.replace("$", "").replace(",", "")) as i32;
-}
-
 export function makeBinaryFile(
   symbolTablePtr: usize,
   dataSegPtr: usize,
@@ -459,7 +463,6 @@ export function makeBinaryFile(
 }
 
 //! Parser
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 const MEM_TEXT_SIZE: i32 = 0x00100000;
 const MEM_DATA_SIZE: i32 = 0x00100000;
 const MEM_STACK_START: i32 = 0x80000000;
@@ -725,14 +728,6 @@ export function getCycles(
 export function getPC(ptr: usize): string {
   const cs = changetype<computerSystem>(ptr);
   return cs.PC_;
-}
-
-function numToHexAndPad(num: i32, pad: i8 = 8): string {
-  if (num < 0) {
-    num = 0xffffffff + num + 1; // 음수를 양의 32비트 정수로 변환
-  }
-
-  return num.toString(16).padStart(pad, "0");
 }
 
 function getInstInfo(mips: MIPS, pc: i32): instruction {

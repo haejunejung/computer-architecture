@@ -16,9 +16,7 @@ const Parser = (): JSX.Element => {
 
   useEffect(() => {
     if (wasmModule) {
-      loadParserFile(wasmModule, example1).then(response => {
-        console.log(response);
-      });
+      loadParserFile(wasmModule, example1);
     }
   }, [wasmModule]);
 

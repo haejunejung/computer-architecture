@@ -110,11 +110,8 @@ function numtoBits(num: i32, pad: i8 = 32): string {
 }
 
 function numToHexAndPad(num: i32, pad: i8 = 8): string {
-  if (num < 0) {
-    num = 0xffffffff + num + 1; // 음수를 양의 32비트 정수로 변환
-  }
-
-  return num.toString(16).padStart(pad, "0");
+  //TODO: memRead할 때 왜 -값이 나오지?
+  return ((num >>> 0) as u32).toString(16).padStart(8, "0");
 }
 
 function customSplit(input: string, delimiters: string[]): string[] {
@@ -492,7 +489,7 @@ const MEM_TEXT_SIZE: i32 = 0x00100000;
 const MEM_DATA_SIZE: i32 = 0x00100000;
 const MEM_STACK_START: i32 = 0x80000000;
 const MEM_STACK_SIZE: i32 = 0x00100000;
-const MIPS_REGS: u8 = 32;
+const MIPS_REGS: i32 = 32;
 const MEM_GROW_UP: i8 = 1;
 const MEM_GROW_DOWN: i8 = -1;
 const INT_MAX: i32 = 2147483647;
@@ -522,7 +519,7 @@ class cpuState {
 class MemRegionT {
   start_: i32 = 0;
   size_: i32 = 0;
-  mem_: Array<i32> = [];
+  mem_: Map<i32, i32> = new Map<i32, i32>();
   offBound_: i32 = 0;
   type_: i8 = 0;
   dirty_: boolean = false;
@@ -558,7 +555,7 @@ export function createComputerSystem(): ComputerSystem {
 class MIPS {
   memRegions_: Array<MemRegionT>;
   runBit_: boolean = true;
-  instInfos_: Array<Instruction> = new Array<Instruction>(1024);
+  instInfos_: Array<Instruction> = [];
   currentState_: cpuState = new cpuState();
   textSize_: i32 = 0;
   dataSize_: i32 = 0;
@@ -581,24 +578,96 @@ export function createMIPS(): MIPS {
   return new MIPS();
 }
 
-export function getTextSize(ptr: usize): i32 {
-  const mips = changetype<MIPS>(ptr);
-  return mips.textSize_;
+function getRegs(cs: ComputerSystem): string {
+  let serializeMap: string[] = [];
+  const keys = cs.REGS_.keys();
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    const value = cs.REGS_.get(key);
+    if (value !== null) {
+      serializeMap.push(`${key}:${value}`);
+    }
+  }
+
+  return serializeMap.join(",");
 }
 
-export function getDataSize(ptr: usize): i32 {
-  const mips = changetype<MIPS>(ptr);
-  return mips.dataSize_;
+function getDataSection(cs: ComputerSystem): string {
+  let serializeMap: string[] = [];
+  const keys = cs.dataSection_.keys();
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    const value = cs.dataSection_.get(key);
+    if (value !== null) {
+      serializeMap.push(`${key}:${value}`);
+    }
+  }
+
+  return serializeMap.join(",");
+}
+
+function getStackSection(cs: ComputerSystem): string {
+  let serializeMap: string[] = [];
+  const keys = cs.stackSection_.keys();
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    const value = cs.stackSection_.get(key);
+    if (value !== null) {
+      serializeMap.push(`${key}:${value}`);
+    }
+  }
+
+  return serializeMap.join(",");
+}
+
+function dump(mips: MIPS): string {
+  const cs = new ComputerSystem();
+  cs.PC_ = numToHexAndPad(mips.currentState_.pc_);
+
+  for (let i = 0; i < MIPS_REGS; i++) {
+    cs.REGS_.set(`R${i}`, `0x${numToHexAndPad(mips.currentState_.regs_[i])}`);
+  }
+
+  if (mips.memRegions_[1].dirty_) {
+    const dstart: i32 = mips.memRegions_[1].start_;
+    const dstop: i32 =
+      mips.memRegions_[1].start_ + mips.memRegions_[1].offBound_;
+
+    for (let i = dstart; i < dstop; i += BYTES_PER_WORD) {
+      cs.dataSection_.set(
+        `0x${numToHexAndPad(i)}`,
+        `0x${numToHexAndPad(memRead(mips.memRegions_, i))}`
+      );
+    }
+  }
+
+  if (mips.memRegions_[2].dirty_) {
+    const dstart: i32 =
+      mips.memRegions_[2].start_ + mips.memRegions_[2].offBound_;
+    const dstop: i32 = mips.memRegions_[2].start_ + MEM_STACK_SIZE - 4;
+
+    for (let i = dstart; i < dstop; i += BYTES_PER_WORD) {
+      cs.stackSection_.set(
+        `0x${numToHexAndPad(i)}`,
+        `0x${numToHexAndPad(memRead(mips.memRegions_, i))}`
+      );
+    }
+  }
+
+  //* make String
+  const pc = cs.PC_;
+  const regs = getRegs(cs);
+  const dataSection = getDataSection(cs);
+  const stackSection = getStackSection(cs);
+  return `.pc${pc}.regs${regs}.dataSection${dataSection}.stackSection${stackSection}`;
 }
 
 export function getCycles(
-  csPtr: usize,
   mipsPtr: usize,
   input: string,
   numCycles: i32 = 10000
 ): Array<string> {
   const mips = changetype<MIPS>(mipsPtr);
-  const cs = changetype<MIPS>(csPtr);
   initInstr(mips, input);
 
   const cycles: Array<string> = [];
@@ -606,6 +675,9 @@ export function getCycles(
     if (mips.runBit_ === false) {
       break;
     }
+
+    processInstruction(mips);
+    cycles.push(dump(mips));
   }
 
   return cycles;
@@ -623,7 +695,7 @@ function initInstr(mips: MIPS, input: string): void {
   for (let i = 0; i < bufferCount; i++) {
     const buffer = input.slice(readStart, readStart + 32);
     if (ii < textSize) {
-      mips.instInfos_[i] = makeInstr(buffer);
+      mips.instInfos_.push(makeInstr(buffer));
       parseText(mips.memRegions_, buffer, ii);
     } else if (ii < textSize + dataSize) {
       parseData(mips.memRegions_, buffer, ii - textSize);
@@ -672,19 +744,50 @@ function parseData(
   memWrite(memRegions, MEM_DATA_START + index, fromBinaryToNum(buffer));
 }
 
+//TODO
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+function setValue(
+  memRegion: MemRegionT,
+  region: i32,
+  offset: i32,
+  value: i32
+): void {
+  // 4바이트 값을 각각의 바이트로 나누어 저장
+  memRegion.mem_.set(region + offset + 3, (value >> 24) & 0x000000ff);
+  memRegion.mem_.set(region + offset + 2, (value >> 16) & 0x000000ff);
+  memRegion.mem_.set(region + offset + 1, (value >> 8) & 0x000000ff);
+  memRegion.mem_.set(region + offset + 0, value & 0xff);
+}
+
+function setHalfValue(
+  memRegion: MemRegionT,
+  region: i32,
+  offset: i32,
+  value: i32
+): void {
+  memRegion.mem_.set(region + offset + 1, (value >> 8) & 0x000000ff);
+  memRegion.mem_.set(region + offset + 0, value & 0xff);
+}
+
+function getValue(memRegion: MemRegionT, region: i32, offset: i32): i32 {
+  // 4바이트 값을 다시 조합
+  const value: i32 =
+    (memRegion.mem_.get(region + offset + 3) << 24) |
+    (memRegion.mem_.get(region + offset + 2) << 16) |
+    (memRegion.mem_.get(region + offset + 1) << 8) |
+    memRegion.mem_.get(region + offset + 0);
+  return value;
+}
+
 function memRead(memRegions: Array<MemRegionT>, address: i32): i32 {
-  let ret = 0;
+  let ret: i32 = 0;
   for (let i = 0; i < memRegions.length; i++) {
     if (
       address >= memRegions[i].start_ &&
       address < memRegions[i].start_ + memRegions[i].size_
     ) {
-      const offset = address - memRegions[i].start_;
-      ret =
-        (memRegions[i].mem_[offset + 3] << 24) |
-        (memRegions[i].mem_[offset + 2] << 16) |
-        (memRegions[i].mem_[offset + 1] << 8) |
-        (memRegions[i].mem_[offset + 0] << 0);
+      const offset: i32 = address - memRegions[i].start_;
+      ret = getValue(memRegions[i], memRegions[i].start_, offset);
     }
   }
 
@@ -702,12 +805,7 @@ function memWrite(
       address < memRegions[i].start_ + memRegions[i].size_
     ) {
       const offset = address - memRegions[i].start_;
-
-      memRegions[i].mem_[offset + 3] = (value >> 24) & 0xff;
-      memRegions[i].mem_[offset + 2] = (value >> 16) & 0xff;
-      memRegions[i].mem_[offset + 1] = (value >> 8) & 0xff;
-      memRegions[i].mem_[offset + 0] = (value >> 0) & 0xff;
-
+      setValue(memRegions[i], memRegions[i].start_, offset, value);
       memRegions[i].setOffBound(offset + 4);
       break;
     }
@@ -725,9 +823,182 @@ function memWriteHalf(
       address < memRegions[i].start_ + memRegions[i].size_
     ) {
       const offset = address - memRegions[i].start_;
-      memRegions[i].mem_[offset + 1] = (value >> 8) & 0xff;
-      memRegions[i].mem_[offset + 0] = (value >> 0) & 0xff;
+      setHalfValue(memRegions[i], memRegions[i].start_, offset, value);
       memRegions[i].setOffBound(offset + 2);
+      break;
     }
   }
+}
+
+export const getInstInfo = (mips: MIPS, pc: i32): Instruction => {
+  return mips.instInfos_[(pc - MEM_TEXT_START) >> 2];
+};
+
+function processInstruction(mips: MIPS): void {
+  const info: Instruction = getInstInfo(mips, mips.currentState_.pc_);
+  const opcode: i8 = info.opcode_;
+  const rs: u8 = info.rs_;
+  const rt: u8 = info.rt_;
+  const rd: u8 = info.rd_;
+  const imm: i8 = info.imm_;
+  const shamt: u8 = info.shamt_;
+  const funcCode: i8 = info.funcCode_;
+  const target: u32 = info.target_;
+
+  if (opcode === 0x0) {
+    RType(mips, rs, rt, rd, shamt, funcCode);
+  } else if (opcode === 0x2 || opcode === 0x3) {
+    JType(mips, opcode, target);
+  } else {
+    IType(mips, opcode, rs, rt, imm);
+  }
+
+  if (mips.currentState_.pc_ - MEM_TEXT_START === mips.textSize_) {
+    mips.runBit_ = false;
+  }
+}
+
+function getRegVal(val: i32): i32 {
+  if (val > INT_MAX) {
+    return (val & 0xffffffff) - UINT_MAX - 1;
+  } else {
+    return val;
+  }
+}
+
+//TODO
+function RType(
+  mips: MIPS,
+  rs: u8,
+  rt: u8,
+  rd: u8,
+  shamt: u8,
+  funcCode: i8
+): void {
+  if (funcCode === 0) {
+    mips.currentState_.regs_[rd] = mips.currentState_.regs_[rt] << shamt;
+  } else if (funcCode === 2) {
+    mips.currentState_.regs_[rd] = mips.currentState_.regs_[rt] >> shamt;
+  } else if (funcCode === 8) {
+    mips.currentState_.pc_ = mips.currentState_.regs_[rs];
+  } else if (funcCode === 32) {
+    mips.currentState_.regs_[rd] =
+      getRegVal(mips.currentState_.regs_[rs]) +
+      getRegVal(mips.currentState_.regs_[rt]);
+  } else if (funcCode === 33) {
+    mips.currentState_.regs_[rd] =
+      mips.currentState_.regs_[rs] + mips.currentState_.regs_[rt];
+  } else if (funcCode === 34) {
+    mips.currentState_.regs_[rd] =
+      getRegVal(mips.currentState_.regs_[rs]) -
+      getRegVal(mips.currentState_.regs_[rt]);
+  } else if (funcCode === 35) {
+    mips.currentState_.regs_[rd] =
+      mips.currentState_.regs_[rs] - mips.currentState_.regs_[rt];
+  } else if (funcCode === 36) {
+    mips.currentState_.regs_[rd] =
+      mips.currentState_.regs_[rs] & mips.currentState_.regs_[rt];
+  } else if (funcCode === 37) {
+    mips.currentState_.regs_[rd] =
+      mips.currentState_.regs_[rs] | mips.currentState_.regs_[rt];
+  } else if (funcCode === 39) {
+    mips.currentState_.regs_[rd] = ~(
+      mips.currentState_.regs_[rs] | mips.currentState_.regs_[rt]
+    );
+  } else if (funcCode === 42) {
+    mips.currentState_.regs_[rd] =
+      getRegVal(mips.currentState_.regs_[rs]) <
+      getRegVal(mips.currentState_.regs_[rt])
+        ? 1
+        : 0;
+  } else if (funcCode === 43) {
+    mips.currentState_.regs_[rd] =
+      mips.currentState_.regs_[rs] < mips.currentState_.regs_[rt] ? 1 : 0;
+  }
+  if (funcCode !== 8) {
+    mips.currentState_.pc_ += BYTES_PER_WORD;
+  }
+}
+
+function JType(mips: MIPS, op: i8, target: u32): void {
+  if (op === 0x2) {
+    mips.currentState_.pc_ = target << 2;
+  } else if (op === 0x3) {
+    mips.currentState_.regs_[31] = mips.currentState_.pc_ + 8;
+    mips.currentState_.pc_ = target << 2;
+  }
+}
+
+function signEx(x: i32): i32 {
+  if (x & 0x8000) {
+    return x | 0xffff0000;
+  } else {
+    return x;
+  }
+}
+
+function zeroEx(x: i32): i32 {
+  return x & 0x0000ffff;
+}
+
+function loadInst(load: i32, mask: i32): i32 {
+  return load & mask;
+}
+
+function IType(mips: MIPS, op: i8, rs: u8, rt: u8, imm: i8): void {
+  if (op === 0x8) {
+    mips.currentState_.regs_[rt] =
+      getRegVal(mips.currentState_.regs_[rs]) + signEx(imm);
+  } else if (op === 0x9) {
+    mips.currentState_.regs_[rt] = mips.currentState_.regs_[rs] + signEx(imm);
+  } else if (op === 0xc) {
+    mips.currentState_.regs_[rt] = mips.currentState_.regs_[rs] & zeroEx(imm);
+  } else if (op === 0x4) {
+    if (mips.currentState_.regs_[rs] === mips.currentState_.regs_[rt]) {
+      mips.currentState_.pc_ += imm * 4;
+    }
+  } else if (op === 0x5) {
+    if (mips.currentState_.regs_[rs] !== mips.currentState_.regs_[rt]) {
+      mips.currentState_.pc_ += imm * 4;
+    }
+  } else if (op === 0x25) {
+    mips.currentState_.regs_[rt] = loadInst(
+      memRead(mips.memRegions_, mips.currentState_.regs_[rs] + signEx(imm)),
+      0x0000ffff
+    );
+  } else if (op === 0xf) {
+    mips.currentState_.regs_[rt] = imm << 16;
+  } else if (op === 0x23) {
+    mips.currentState_.regs_[rt] = memRead(
+      mips.memRegions_,
+      mips.currentState_.regs_[rs] + signEx(imm)
+    );
+  } else if (op === 0xd) {
+    mips.currentState_.regs_[rt] = mips.currentState_.regs_[rs] | zeroEx(imm);
+  } else if (op === 0xa) {
+    if (getRegVal(mips.currentState_.regs_[rs]) < signEx(imm)) {
+      mips.currentState_.regs_[rt] = 1;
+    } else {
+      mips.currentState_.regs_[rt] = 0;
+    }
+  } else if (op === 0xb) {
+    if (mips.currentState_.regs_[rs] < signEx(imm)) {
+      mips.currentState_.regs_[rt] = 1;
+    } else {
+      mips.currentState_.regs_[rt] = 0;
+    }
+  } else if (op === 0x29) {
+    memWriteHalf(
+      mips.memRegions_,
+      mips.currentState_.regs_[rs] + signEx(imm),
+      mips.currentState_.regs_[rt]
+    );
+  } else if (op === 0x2b) {
+    memWrite(
+      mips.memRegions_,
+      mips.currentState_.regs_[rs] + signEx(imm),
+      mips.currentState_.regs_[rt]
+    );
+  }
+  mips.currentState_.pc_ += BYTES_PER_WORD;
 }

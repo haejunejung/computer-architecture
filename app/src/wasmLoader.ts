@@ -48,8 +48,7 @@ export const loadParserFile = (
     createMIPS,
     createComputerSystem,
     getCycles,
-    getTextSize,
-    getDataSize,
+    getInstInfoSize,
   } = exports;
 
   let result: Array<ParserFile> = [];
@@ -57,20 +56,38 @@ export const loadParserFile = (
   if (
     typeof createMIPS === 'function' &&
     typeof createComputerSystem === 'function' &&
-    typeof getCycles === 'function' &&
-    typeof getTextSize === 'function' &&
-    typeof getDataSize === 'function'
+    typeof getCycles === 'function'
   ) {
     const inputPtr = __newString(
       '000000000000000000000000010110000000000000000000000000000000110000000010001000001000100000100100000000100100000010010000001001000011110000001000000100000000000000111100000010010001000000000000001101010010100100000000000001000000000101000000010100000010010000000001011000000101100000100100001000100011000100000000000000010010000101101011000000000000000100000001001000000100100000100101000101010110100011111111111111000010001001010010000000000000001000100001011010110000000000000001000000000001000110010000010000000000000000010010100010000100001000000010001100101001100000100100000101010110100111111111111110100000000010111111001010000010000000000010001100101000000000100111000100010100100000000000000000010000100000010000000000000000011000110110000100001111000011110000000000000000000000000000011001000000000000000000000000001100100000010010001101000101011001111000',
     );
     const mipsPtr = __pin(createMIPS());
-    const csPtr = __pin(createComputerSystem());
 
-    getCycles(csPtr, mipsPtr, inputPtr, 10000);
-    console.log(getTextSize(mipsPtr), getDataSize(mipsPtr));
+    const cyclesPtr = getCycles(mipsPtr, inputPtr, 10000);
+    const cycles = __getArray(cyclesPtr);
+    result = cycles.map(b => {
+      const cycle = __getString(b);
+      const pcStartIdx = cycle.indexOf('.pc');
+      const regsStartIdx = cycle.indexOf('.regs');
+      const dataSectionStartIdx = cycle.indexOf('.dataSection');
+      const stackSectionStartIdx = cycle.indexOf('.stackSection');
+      const pc = cycle.slice(pcStartIdx + 3, regsStartIdx);
+      const regs = makeMap(cycle.slice(regsStartIdx + 5, dataSectionStartIdx));
+      const dataSection = makeMap(
+        cycle.slice(dataSectionStartIdx + 12, stackSectionStartIdx),
+      );
+      const stackSection = makeMap(cycle.slice(stackSectionStartIdx + 13));
+
+      return {
+        pc: pc,
+        regs: regs,
+        dataSection: dataSection,
+        stackSection: stackSection,
+      };
+    });
+
+    console.log(result);
     __unpin(mipsPtr);
-    __unpin(csPtr);
     __collect();
   }
 
